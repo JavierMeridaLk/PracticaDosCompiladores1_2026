@@ -1,0 +1,59 @@
+#Esto es un comentario de línea
+
+#Estructura Wison
+
+Wison ¿
+Lex {:
+     /**
+      Esto es un
+      Comentario de bloque
+    */
+
+    # Declaración de terminales de la forma:
+    # Terminal  <- EXPRESIÓN ;
+       
+    Terminal      <- 'a' ;    # cualquier carácter alfanumérico por separado
+    Terminal        <- '+' ;    # cualquier carácter especial por separado
+    Terminal      <- '.' ;    # cualquier carácter especial por separado
+    Terminal       <- '(' ;    # cualquier carácter especial por separado
+    Terminal       <- ')' ;    # cualquier carácter especial por separado
+    Terminal        <- 'FIN';   # cualquier palabra reservada
+    Terminal      <- [aA-zZ]; # alfabeto completo en mayusculas y minusculas
+    Terminal     <- [0-9] ;  # Digitos del 0 al 9
+    Terminal    <- [0-9]* ; # Estrella de Kleene para hacer 0 o n veces
+    Terminal  <- [0-9]+ ; # Cerradura positiva para hacer 1 on veces
+    Terminal  <- [0-9]? ; # reconoce la cláusula ? para hacer 0 o 1 vez 
+    Terminal    <- ([0-9]*)()(); # terminal combinado
+
+:}
+
+Syntax {{:
+   # Declaración de no terminales de la forma
+   # No_Terminal %_Nombre ;
+
+   No_Terminal %_Prod_A;
+   No_Terminal %_Prod_B;
+   No_Terminal %_Prod_C;
+   No_Terminal %_S;
+   
+   
+   # Simbolo inicial de la forma
+   # Initial_Sim %_Nombre ;
+ 
+   Initial_Sim %_S ;
+
+   #Todo símbolo no terminal debe ser declarado antes de usarse en las producciones
+   # Las producciones son de la siguiente forma
+   # %_Initial_Sim  <= %_Prod_A ... %_No_terminal_N o  ... ;
+   
+   %_S <= %_Prod_A  ;
+   %_Prod_A <=  %_Prod_B  ;
+   %_Prod_B <= %_Prod_B %Prod_C | %_Prod_C ;
+   %_Prod_C <=    ;
+:}}
+
+?Wison
+
+# Fin de estructura Wison
+
+

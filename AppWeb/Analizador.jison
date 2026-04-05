@@ -113,14 +113,26 @@ declaracion_terminal
 /*  Expresión terminal  */
 
 expresion_terminal
+    : concatenacion
+    ;
+
+concatenacion
+    : concatenacion repeticion
+    | repeticion
+    ;
+
+repeticion
+    : base
+    | base KLEENE
+    | base MAS
+    | base SIMBOLO_CIERRE
+    ;
+
+base
     : TEXTO
     | RANGO_LETRAS
     | RANGO_NUMEROS
-    | expresion_terminal KLEENE
-    | expresion_terminal MAS
-    | expresion_terminal SIMBOLO_CIERRE   /* ? */
     | PARENTESIS_ABRE expresion_terminal PARENTESIS_CIERRA
-    | expresion_terminal expresion_terminal
     ;
 
 /*  Bloque sintáctico */
