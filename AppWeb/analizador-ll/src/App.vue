@@ -1,87 +1,136 @@
 <template>
-  <div class="layout">
-    <!-- Sidebar fijo -->
-    <aside class="sidebar">
-      <div class="sidebar-title">Historial de Gramáticas</div>
-      <ul class="sidebar-list">
-        <li v-for="(item, index) in history" :key="index" class="sidebar-item">
-          <div class="title">{{ item.title }}</div>
-          <div class="subtitle">{{ item.subtitle }}</div>
-        </li>
-      </ul>
-    </aside>
+  <div class="flex min-h-screen bg-[#0b0f1a] text-slate-300 font-sans overflow-y-auto">
+    
+    <!-- Sidebar con slide -->
+    <transition name="slide">
+      <aside v-if="sidebarOpen" class="w-72 bg-[#161b2b] border-r border-slate-800 flex flex-col shadow-2xl">
+        <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-[#1c2333]">
+          <h2 class="font-bold text-xs uppercase tracking-widest text-slate-500">Historial de Gramáticas</h2>
+          <button @click="sidebarOpen = false" class="text-slate-500 hover:text-white">
+            <span class="material-icons text-sm">first_page</span>
+          </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+          <div v-for="item in historial" :key="item.id" 
+               class="p-3 rounded-xl bg-[#1c2333] border border-slate-700/50 hover:border-emerald-500/50 transition-all cursor-pointer group">
+            <p class="text-sm font-medium text-slate-200 group-hover:text-emerald-400">{{ item.nombre }}</p>
+            <p class="text-[10px] text-slate-500 mt-1 uppercase">{{ item.tipo }}</p>
+            <p class="text-[11px] text-emerald-500 mt-1 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {{ item.estado }}
+            </p>
+          </div>
+        </div>
+      </aside>
+    </transition>
 
-    <!-- Contenido principal -->
-    <div class="content">
-      <!-- Header -->
-      <div class="header">
-        <h1>Analizador sintáctico LL</h1>
-        <button class="btn-upload">📤 Subir archivo de configuración</button>
-      </div>
+    <main class="flex-1 flex flex-col min-w-0 relative">
+      <!-- Header centrado + botón abrir sidebar -->
+      <header class="h-16 flex items-center justify-center bg-[#0b0f1a] border-b border-slate-800/60 relative">
+        <button v-if="!sidebarOpen" @click="sidebarOpen = true" class="absolute left-4 p-2 hover:bg-slate-800 rounded-lg transition">
+          <span class="material-icons">menu</span>
+        </button>
+        <h1 class="text-xl font-semibold tracking-tight text-white">Analizador sintáctico LL</h1>
+      </header>
 
-      <!-- Zona central -->
-      <div class="main-grid">
+      <div class="flex-1 p-6 grid grid-cols-12 gap-6">
+        
         <!-- Editor -->
-        <div class="editor-card">
-          <div class="editor-wrapper">
-            <div class="line-numbers">
-              <div v-for="n in lineCount" :key="n">{{ n }}</div>
+        <div class="col-span-8 flex flex-col gap-6">
+          <div class="flex-1 bg-[#161b2b] rounded-2xl border border-slate-800 flex flex-col relative shadow-lg overflow-hidden">
+            
+            <!-- Header editor -->
+            <div class="p-4 flex justify-between items-center bg-slate-800/30 rounded-t-2xl border-b border-slate-700">
+              <div>
+                <h1 class="text-sm font-bold text-white text-[20px]">Editor de Código</h1>
+              </div>
+              <button class="bg-[#2563eb] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition shadow-md">
+                <span class="material-icons text-base">cloud_upload</span> SUBIR CONFIGURACIÓN
+              </button>
             </div>
 
-            <textarea
-              v-model="code"
-              @input="updateCursor"
-              @click="updateCursor"
-              class="editor"
-            />
+            <!-- Editor con scroll interno -->
+            <div class="flex flex-1 overflow-hidden">
+              <div class="flex flex-1 overflow-auto" ref="scrollContainer" @scroll="syncScroll">
+                
+                <!-- Line numbers -->
+                <div ref="linesRef" class="text-sm font-mono text-slate-500 p-4 text-right select-none leading-relaxed">
+                  <div v-for="n in lineCount" :key="n">{{ n }}</div>
+                </div>
+
+                <!-- Textarea -->
+                <textarea 
+                  ref="textareaRef"
+                  v-model="grammarInput"
+                  @input="updateCursor"
+                  @click="updateCursor"
+                  class="flex-1 bg-transparent p-4 outline-none resize-none font-mono text-emerald-400 text-sm leading-relaxed min-h-full"
+                  spellcheck="false"
+                ></textarea>
+              </div>
+            </div>
+            
+            <!-- Cursor -->
+            <div class="p-3 text-right text-[10px] text-slate-600 font-mono border-t border-slate-800 uppercase tracking-tighter">
+              Línea: {{ cursor.line }}, Columna: {{ cursor.column }}
+            </div>
           </div>
 
-          <div class="editor-footer">
-            Línea: {{ cursor.line }}, Columna: {{ cursor.column }}
-          </div>
-
-          <button class="btn-analyze">⚡ Analizar gramática</button>
+          <button @click="procesarGramatica" 
+                  class="w-full bg-[#10b981] hover:bg-[#059669] text-[#0b0f1a] py-4 rounded-xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-emerald-900/20">
+            <span class="material-icons">bolt</span> Analizar gramática
+          </button>
         </div>
 
         <!-- Panel derecho -->
-        <div class="right-panel">
-          <!-- Entrada -->
-          <div class="card">
-            <h3>Cadenas de Entrada</h3>
-            <input class="input" placeholder="Ingresar cadena para probar" />
-            <button class="btn-secondary">Analizar entrada</button>
+        <div class="col-span-4 flex flex-col gap-6">
+          
+          <div class="bg-[#161b2b] p-5 rounded-2xl border border-slate-800 shadow-sm">
+            <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Cadenas de Entrada</h3>
+            <p class="text-[15px] text-slate-500">Ingresa una cadena de entrada para analizar</p>
+            <textarea v-model="inputString" rows="3" class="w-full bg-[#0b0f1a] border border-slate-700 rounded-xl p-4 text-sm outline-none focus:border-blue-500 transition"></textarea>
+            <button class="w-full mt-4 py-2.5 border border-blue-500/30 text-blue-400 rounded-xl hover:bg-blue-500/10 transition text-xs font-bold uppercase">Analizar entrada</button>
           </div>
 
-          <!-- Salida -->
-          <div class="card">
-            <h3>Salida del Analizador</h3>
-            <div class="empty"></div>
+          <div class="min-h-[300px] bg-[#161b2b] p-5 rounded-2xl border border-slate-800 flex flex-col shadow-sm">
+            <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Salida del Analizador</h3>
+            <div class="flex-1 bg-[#0b0f1a] rounded-xl border border-slate-800/50"></div>
           </div>
 
-          <!-- Errores -->
-          <div class="card">
-            <h3 class="warning">Lista de Errores</h3>
-            <div class="empty"></div>
+          <div class="bg-[#161b2b] rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
+            <div class="p-4 flex items-center bg-red-500/5 border-b border-slate-800">
+              <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
+                <span class="material-icons text-base">error_outline</span> Lista de Errores
+              </h3>
+            </div>
+            <div class="h-32 overflow-y-auto"></div>
           </div>
         </div>
+
       </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 
-const history = ref([
-  { title: 'Gramática Aritmética v2', subtitle: 'Aceptado' },
-  { title: 'Gramática JSON', subtitle: 'Aceptado' },
-  { title: 'Gramática Aritmética v1', subtitle: 'Aceptado' }
-])
+const sidebarOpen = ref(true)
+const grammarInput = ref("")
+const inputString = ref("")
 
-const code = ref('')
+const textareaRef = ref(null)
+const linesRef = ref(null)
+
 const cursor = ref({ line: 1, column: 1 })
 
-const lineCount = computed(() => code.value.split('\n').length)
+const lineCount = computed(() => grammarInput.value.split('\n').length)
+
+const historial = ref([
+  { id: 1, nombre: 'Gramática Aritmética v2', tipo: 'Gramática de JSON', estado: 'Aceptado' },
+  { id: 2, nombre: 'Gramática Aritmética v2', tipo: 'Gramática de JSON', estado: 'Aceptado' },
+  { id: 3, nombre: 'Gramática Aritmética v0', tipo: 'Aceptado', estado: 'Aceptado' }
+])
 
 function updateCursor(e) {
   const text = e.target.value.substring(0, e.target.selectionStart)
@@ -89,168 +138,24 @@ function updateCursor(e) {
   cursor.value.line = lines.length
   cursor.value.column = lines[lines.length - 1].length + 1
 }
+
+function syncScroll() {
+  if (linesRef.value && textareaRef.value) {
+    linesRef.value.scrollTop = textareaRef.value.scrollTop
+  }
+}
+
+const procesarGramatica = () => {
+  console.log("Enviando al backend:", grammarInput.value)
+}
 </script>
 
 <style scoped>
-.layout {
-  display: flex;
-  height: 100vh;
-  background: #0b1220;
-  color: #e2e8f0;
-  font-family: Inter, sans-serif;
+.slide-enter-active, .slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-/* Sidebar */
-.sidebar {
-  width: 260px;
-  background: #020617;
-  border-right: 1px solid #1e293b;
-  padding: 1rem;
-}
-
-.sidebar-title {
-  font-weight: bold;
-  margin-bottom: 1rem;
-}
-
-.sidebar-list {
-  list-style: none;
-  padding: 0;
-}
-
-.sidebar-item {
-  padding: 0.7rem;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.sidebar-item:hover {
-  background: #1e293b;
-}
-
-.title {
-  font-size: 14px;
-}
-
-.subtitle {
-  font-size: 12px;
-  color: #22c55e;
-}
-
-/* Content */
-.content {
-  flex: 1;
-  padding: 1rem;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.btn-upload {
-  background: #2563eb;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-}
-
-/* Grid */
-.main-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1rem;
-  height: calc(100% - 60px);
-}
-
-/* Editor */
-.editor-card {
-  display: flex;
-  flex-direction: column;
-  background: #020617;
-  border-radius: 12px;
-  padding: 1rem;
-}
-
-.editor-wrapper {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.line-numbers {
-  padding: 10px;
-  background: #020617;
-  text-align: right;
-  user-select: none;
-}
-
-.editor {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: white;
-  font-family: monospace;
-  padding: 10px;
-  outline: none;
-  resize: none;
-}
-
-.editor-footer {
-  font-size: 12px;
-  margin-top: 5px;
-}
-
-.btn-analyze {
-  margin-top: 10px;
-  background: #22c55e;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* Right panel */
-.right-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.card {
-  background: #020617;
-  padding: 1rem;
-  border-radius: 12px;
-}
-
-.input {
-  width: 100%;
-  padding: 8px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: none;
-}
-
-.btn-secondary {
-  width: 100%;
-  background: #1e293b;
-  padding: 8px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.warning {
-  color: #f59e0b;
-}
-
-.empty {
-  height: 80px;
-  background: #0f172a;
-  border-radius: 8px;
+.slide-enter-from, .slide-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
 }
 </style>
