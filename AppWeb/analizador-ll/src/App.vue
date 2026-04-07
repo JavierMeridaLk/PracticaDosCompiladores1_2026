@@ -31,6 +31,20 @@
           <span class="material-icons">menu</span>
         </button>
         <h1 class="text-xl font-semibold tracking-tight text-white">Analizador sintáctico LL</h1>
+        
+        <!-- Mensajes de notificación -->
+        <div class="absolute right-4 flex flex-col gap-2">
+          <transition name="fade">
+            <div v-if="mensajeExito" class="bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 px-4 py-2 rounded-lg text-sm">
+              ✓ {{ mensajeExito }}
+            </div>
+          </transition>
+          <transition name="fade">
+            <div v-if="mensajeError" class="bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-2 rounded-lg text-sm">
+              ✗ {{ mensajeError }}
+            </div>
+          </transition>
+        </div>
       </header>
 
       <div class="flex-1 p-6 grid grid-cols-12 gap-6">
@@ -44,9 +58,10 @@
               <div>
                 <h1 class="text-sm font-bold text-white text-[20px]">Editor de Código</h1>
               </div>
-              <button class="bg-[#2563eb] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition shadow-md">
+              <button @click="clickSubirArchivo" class="bg-[#2563eb] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition shadow-md">
                 <span class="material-icons text-base">cloud_upload</span> SUBIR CONFIGURACIÓN
               </button>
+              <input type="file" ref="fileInputRef" @change="handleFileUpload" accept=".txt" style="display: none;">
             </div>
 
             <!-- Editor con scroll interno -->
@@ -118,6 +133,10 @@ import { ref, computed } from 'vue'
 const sidebarOpen = ref(true)
 const grammarInput = ref("")
 const inputString = ref("")
+const fileInputRef = ref(null)
+const cargando = ref(false)
+const mensajeError = ref("")
+const mensajeExito = ref("")
 
 const textareaRef = ref(null)
 const linesRef = ref(null)
@@ -145,6 +164,59 @@ function syncScroll() {
   }
 }
 
+function clickSubirArchivo() {
+  fileInputRef.value.click()
+}
+
+async function handleFileUpload(event) {
+  const file = event.target.files[0]
+  
+  if (!file) {
+    return
+  }
+
+  // Validar que sea un archivo .txt
+  if (!file.name.endsWith('.txt')) {
+    mensajeError.value = 'Solo se permiten archivos .txt'
+    setTimeout(() => mensajeError.value = '', 3000)
+    return
+  }
+
+  cargando.value = true
+  mensajeError.value = ""
+  mensajeExito.value = ""
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch('http://localhost:5000/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+
+    const data = await response.json()
+
+    if (data.exito) {
+      // Cargar el contenido del archivo en el editor
+      const contenidoResponse = await fetch(`http://localhost:5000/api/files/${data.archivo.nombreUnico}`)
+      const contenido = await contenidoResponse.text()
+      
+      grammarInput.value = contenido
+      mensajeExito.value = `Archivo "${file.name}" cargado exitosamente`
+      setTimeout(() => mensajeExito.value = '', 3000)
+    } else {
+      mensajeError.value = data.error || 'Error al subir el archivo'
+    }
+  } catch (error) {
+    console.error('Error:', error)
+    mensajeError.value = 'Error de conexión con el servidor'
+  } finally {
+    cargando.value = false
+    fileInputRef.value.value = '' // Limpiar el input
+  }
+}
+
 const procesarGramatica = () => {
   console.log("Enviando al backend:", grammarInput.value)
 }
@@ -156,6 +228,13 @@ const procesarGramatica = () => {
 }
 .slide-enter-from, .slide-leave-to {
   transform: translateX(-100%);
+  opacity: 0;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
 </style>

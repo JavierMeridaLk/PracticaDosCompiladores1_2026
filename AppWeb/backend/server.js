@@ -4,7 +4,7 @@ import multer from 'multer';
 import apiRoutes from './src/routes/api.routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000; // Puerto 5000
 
 // Middleware
 app.use(cors());

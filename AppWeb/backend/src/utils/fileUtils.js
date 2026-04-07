@@ -3,13 +3,18 @@
  * Funciones auxiliares para operaciones comunes con archivos
  */
 
+import fs from 'fs';
+import path from 'path';
+
 /**
  * Valida que la extensión del archivo sea de texto
  * @param {string} nombreArchivo - Nombre del archivo a validar
  * @returns {boolean} True si la extensión es válida (.txt, .text)
  */
 export function validarExtensionArchivo(nombreArchivo) {
-  // Implementación pendiente
+  const extensionesValidas = ['.txt', '.text'];
+  const extension = path.extname(nombreArchivo).toLowerCase();
+  return extensionesValidas.includes(extension);
 }
 
 /**
@@ -18,7 +23,11 @@ export function validarExtensionArchivo(nombreArchivo) {
  * @returns {string} Nombre único generado
  */
 export function generarNombreUnicoArchivo(nombreOriginal) {
-  // Implementación pendiente
+  const timestamp = Date.now();
+  const extension = path.extname(nombreOriginal);
+  const nombreSinExtension = path.basename(nombreOriginal, extension);
+  const nombreUnico = `${nombreSinExtension}_${timestamp}${extension}`;
+  return nombreUnico;
 }
 
 /**
@@ -26,7 +35,9 @@ export function generarNombreUnicoArchivo(nombreOriginal) {
  * @param {string} rutaDirectorio - Ruta del directorio a crear
  */
 export function asegurarDirectorioExiste(rutaDirectorio) {
-  // Implementación pendiente
+  if (!fs.existsSync(rutaDirectorio)) {
+    fs.mkdirSync(rutaDirectorio, { recursive: true });
+  }
 }
 
 /**
@@ -34,8 +45,8 @@ export function asegurarDirectorioExiste(rutaDirectorio) {
  * @param {string} rutaArchivo - Ruta del archivo a leer
  * @returns {Promise<string>} Contenido del archivo
  */
-export function leerArchivoAsync(rutaArchivo) {
-  // Implementación pendiente
+export async function leerArchivoAsync(rutaArchivo) {
+  return await fs.promises.readFile(rutaArchivo, 'utf8');
 }
 
 /**
@@ -44,8 +55,8 @@ export function leerArchivoAsync(rutaArchivo) {
  * @param {string} contenido - Contenido a escribir
  * @returns {Promise<void>}
  */
-export function escribirArchivoAsync(rutaArchivo, contenido) {
-  // Implementación pendiente
+export async function escribirArchivoAsync(rutaArchivo, contenido) {
+  await fs.promises.writeFile(rutaArchivo, contenido, 'utf8');
 }
 
 /**
@@ -53,6 +64,8 @@ export function escribirArchivoAsync(rutaArchivo, contenido) {
  * @param {string} rutaArchivo - Ruta del archivo a eliminar
  * @returns {Promise<void>}
  */
-export function eliminarArchivo(rutaArchivo) {
-  // Implementación pendiente
+export async function eliminarArchivo(rutaArchivo) {
+  if (fs.existsSync(rutaArchivo)) {
+    await fs.promises.unlink(rutaArchivo);
+  }
 }

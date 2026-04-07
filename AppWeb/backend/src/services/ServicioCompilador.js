@@ -24,8 +24,35 @@ class ServicioCompilador {
    * @param {Object} archivo - Archivo subido a procesar
    * @returns {Promise<Object>} Resultado del procesamiento
    */
-  procesarArchivoSubido(archivo) {
-    // Implementación pendiente
+  async procesarArchivoSubido(archivo) {
+    try {
+      // Subir el archivo usando GestorArchivos
+      const resultadoSubida = await this.gestorArchivos.subirArchivo(archivo);
+
+      if (!resultadoSubida.exito) {
+        return resultadoSubida;
+      }
+
+      // Leer el contenido del archivo subido
+      const resultadoLectura = await this.gestorArchivos.leerArchivo(resultadoSubida.nombreUnico);
+
+      if (!resultadoLectura.exito) {
+        return resultadoLectura;
+      }
+
+      // Procesar el texto del archivo
+      const resultadoAnalisis = await this.procesarTexto(resultadoLectura.contenido);
+
+      return {
+        ...resultadoSubida,
+        analisis: resultadoAnalisis
+      };
+    } catch (error) {
+      return {
+        exito: false,
+        error: error.message
+      };
+    }
   }
 
   /**
@@ -33,8 +60,22 @@ class ServicioCompilador {
    * @param {string} texto - Texto a procesar
    * @returns {Object} Resultado del procesamiento
    */
-  procesarTexto(texto) {
-    // Implementación pendiente
+  async procesarTexto(texto) {
+    try {
+      // Aquí irá la lógica de análisis usando AnalizadorTexto
+      // Por ahora retornamos una respuesta básica
+      return {
+        exito: true,
+        textoAnalizado: texto,
+        longitud: texto.length,
+        mensaje: 'Texto procesado exitosamente'
+      };
+    } catch (error) {
+      return {
+        exito: false,
+        error: error.message
+      };
+    }
   }
 
   /**
