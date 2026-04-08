@@ -93,41 +93,72 @@
           </button>
         </div>
 
-        <div class="col-span-5 flex flex-col gap-6 overflow-hidden">
+        <div class="col-span-5 flex flex-col gap-6 h-full overflow-hidden">
           
-          <div class="bg-[#161b2b] p-5 rounded-2xl border border-slate-800 shadow-sm">
-            <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Cadenas de Entrada</h3>
-            <p class="text-[15px] text-slate-500">Ingresa una cadena de entrada para analizar</p>
-            <textarea v-model="inputString" rows="3" class="w-full bg-[#0b0f1a] border border-slate-700 rounded-xl p-4 text-sm outline-none focus:border-blue-500 transition"></textarea>
-            <button class="w-full mt-4 py-2.5 border border-blue-500/30 text-blue-400 rounded-xl hover:bg-blue-500/10 transition text-xs font-bold uppercase">Analizar entrada</button>
-          </div>
+  <div class="bg-[#161b2b] p-5 rounded-2xl border border-slate-800 shadow-sm transition-all duration-300"
+       :class="{ 'opacity-50 grayscale-[0.4]': !gramaticaEsValida }">
+    <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest flex justify-between">
+      Cadenas de Entrada
+      <span v-if="!gramaticaEsValida" class="text-[9px] text-amber-500 normal-case font-bold">Requiere gramática válida</span>
+    </h3>
+    <p class="text-[15px] text-slate-500">Ingresa una cadena de entrada para analizar</p>
+    
+    <textarea 
+      v-model="inputString" 
+      :disabled="!gramaticaEsValida"
+      rows="3" 
+      class="w-full bg-[#0b0f1a] border border-slate-700 rounded-xl p-4 text-sm outline-none focus:border-blue-500 transition disabled:cursor-not-allowed"
+      :placeholder="gramaticaEsValida ? 'Escribe tu cadena aquí...' : 'Corrige la gramática para habilitar'"></textarea>
+    
+    <button 
+      :disabled="!gramaticaEsValida"
+      class="w-full mt-4 py-2.5 border rounded-xl transition text-xs font-bold uppercase flex items-center justify-center gap-2"
+      :class="gramaticaEsValida ? 'border-blue-500/30 text-blue-400 hover:bg-blue-500/10' : 'border-slate-800 text-slate-600 cursor-not-allowed'">
+      <span class="material-icons text-sm">{{ gramaticaEsValida ? 'play_arrow' : 'lock' }}</span>
+      Analizar entrada
+    </button>
+  </div>
 
-          <div class="min-h-[300px] bg-[#161b2b] p-5 rounded-2xl border border-slate-800 flex flex-col shadow-sm">
-            <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Salida del Analizador</h3>
-            <div class="flex-1 bg-[#0b0f1a] rounded-xl border border-slate-800/50"></div>
-          </div>
+  <div class="min-h-[300px] bg-[#161b2b] p-5 rounded-2xl border border-slate-800 flex flex-col shadow-sm">
+    <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Salida del Analizador</h3>
+    <div class="flex-1 bg-[#0b0f1a] rounded-xl border border-slate-800/50"></div>
+  </div>
 
-          <div class="bg-[#161b2b] rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
-            <div class="p-4 flex items-center bg-red-500/5 border-b border-slate-800">
-              <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
-                <span class="material-icons text-base">error_outline</span> Lista de Errores
-              </h3>
+  <div class="h-64 bg-[#161b2b] rounded-2xl border border-slate-800 overflow-hidden shadow-sm flex flex-col min-h-0">
+      <div class="p-4 flex items-center justify-between bg-red-500/5 border-b border-slate-800">
+        <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
+          <span class="material-icons text-base">error_outline</span> Lista de Errores
+        </h3>
+        <span v-if="erroresAnalisis.length > 0" class="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
+          {{ erroresAnalisis.length }}
+        </span>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#0b0f1a]/30 custom-scrollbar">
+        <div v-if="erroresAnalisis.length === 0" class="h-full flex flex-col items-center justify-center text-slate-500 italic opacity-60">
+          <span class="material-icons text-4xl mb-2 text-emerald-500/50">verified</span>
+          <p class="text-sm">Sin errores en la gramática</p>
+        </div>
+
+        <div v-for="(error, index) in erroresAnalisis" :key="index" 
+            class="bg-[#1c2333] border-l-4 border-red-500 rounded-r-xl p-4 shadow-md transition hover:bg-[#232b40]">
+          <div class="flex justify-between items-start mb-2">
+            <div class="flex flex-col">
+              <span class="text-[10px] uppercase font-black text-red-500 tracking-tighter">Tipo: {{ error.tipo }}</span>
+              <span class="text-xs font-bold text-white mt-1">{{ error.descripcion }}</span>
             </div>
-            <div class="h-64 overflow-y-auto p-3 space-y-2">
-              <div v-if="erroresAnalisis.length === 0" class="text-sm text-emerald-400 flex items-center gap-2">
-                <span class="material-icons text-base">check_circle</span> Sin errores
-              </div>
-              <div v-for="(error, index) in erroresAnalisis" :key="index" class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-xs">
-                <div class="flex justify-between mb-1">
-                  <span class="font-bold text-red-400">{{ error.tipo }}</span>
-                  <span class="text-slate-500">Línea {{ error.linea }}, Col {{ error.columna }}</span>
-                </div>
-                <p class="text-slate-300 mb-1">{{ error.descripcion }}</p>
-                <p v-if="error.lexema" class="text-slate-500">Lexema: <span class="font-mono text-slate-400">{{ error.lexema }}</span></p>
-              </div>
-            </div>
+            <span class="bg-slate-800 text-slate-400 px-2 py-1 rounded text-[10px] font-mono">
+              L:{{ error.linea }} C:{{ error.columna }}
+            </span>
+          </div>
+          <div v-if="error.lexema" class="mt-2 p-2 bg-[#0b0f1a] rounded border border-slate-800">
+            <span class="text-[10px] text-slate-500 uppercase block mb-1">Lexema con conflicto:</span>
+            <code class="text-emerald-400 font-mono text-sm">"{{ error.lexema }}"</code>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
 
       </div>
     </main>
@@ -152,7 +183,12 @@ const linesRef = ref(null)
 
 const cursor = ref({ line: 1, column: 1 })
 
-const lineCount = computed(() => grammarInput.value.split('\n').length)
+// NUEVO: Propiedad para habilitar/deshabilitar el panel de entrada
+const gramaticaEsValida = computed(() => {
+  return grammarInput.value.trim() !== "" && erroresAnalisis.value.length === 0 && mensajeExito.value !== "";
+});
+
+const lineCount = computed(() => grammarInput.value.split('\n').length || 1)
 
 const historial = ref([
   { id: 1, nombre: 'Gramática Aritmética v2', tipo: 'Gramática de JSON', estado: 'Aceptado' },
@@ -186,8 +222,6 @@ async function handleFileUpload(event) {
 
   try {
     cargando.value = true;
-    
-    // 1. Subir el archivo al servidor
     const response = await fetch('http://localhost:5000/api/upload', {
       method: 'POST',
       body: formData
@@ -195,10 +229,7 @@ async function handleFileUpload(event) {
     const data = await response.json();
 
     if (data.exito) {
-      // 2. Pedirle al servidor el contenido del archivo recién guardado
-      // IMPORTANTE: data.archivo.nombreUnico debe coincidir con lo que enviamos
       const contenidoResponse = await fetch(`http://localhost:5000/api/files/${data.archivo.nombreUnico}`);
-      
       if (contenidoResponse.ok) {
         const contenido = await contenidoResponse.text();
         grammarInput.value = contenido;
@@ -228,46 +259,29 @@ const procesarGramatica = async () => {
   erroresAnalisis.value = []
 
   try {
-    // CAMBIO: Se ajusta la URL a la que definimos en server.js (/api/analizar)
-    // CAMBIO: Se ajusta el body a { entrada: ... } según AnalizadorTexto.js
     const response = await fetch('http://localhost:5000/api/analizar', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ entrada: grammarInput.value })
     })
 
     const data = await response.json()
     mensajeProcesando.value = ''
 
-    // CAMBIO: Se ajusta la validación a data.ok
     if (!data.ok) {
-      erroresAnalisis.value = Array.isArray(data.errores) && data.errores.length
-        ? data.errores
-        : [{
+      erroresAnalisis.value = data.errores || [{
             tipo: 'SISTEMA',
             lexema: '',
             linea: 0,
             columna: 0,
-            descripcion: data.mensaje || 'Ocurrió un error al analizar'
+            descripcion: data.mensaje || 'Error en el análisis'
           }]
       mensajeError.value = 'Se encontraron errores en el análisis'
-      setTimeout(() => mensajeError.value = '', 3000)
-      return
+    } else {
+      mensajeExito.value = data.mensaje || 'Análisis completado exitosamente'
     }
-
-    mensajeExito.value = data.mensaje || 'Análisis completado exitosamente'
-    setTimeout(() => mensajeExito.value = '', 3000)
   } catch (error) {
-    mensajeProcesando.value = ''
-    erroresAnalisis.value = [{
-      tipo: 'CONEXION',
-      lexema: '',
-      linea: 0,
-      columna: 0,
-      descripcion: 'Error de conexión con el servidor'
-    }]
+    mensajeError.value = 'Error de conexión con el servidor'
   } finally {
     cargando.value = false
   }
