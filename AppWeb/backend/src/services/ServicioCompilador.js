@@ -62,14 +62,8 @@ class ServicioCompilador {
    */
   async procesarTexto(texto) {
     try {
-      // Aquí irá la lógica de análisis usando AnalizadorTexto
-      // Por ahora retornamos una respuesta básica
-      return {
-        exito: true,
-        textoAnalizado: texto,
-        longitud: texto.length,
-        mensaje: 'Texto procesado exitosamente'
-      };
+      const resultadoAnalisis = this.analizadorTexto.analizarTexto(texto);
+      return resultadoAnalisis;
     } catch (error) {
       return {
         exito: false,

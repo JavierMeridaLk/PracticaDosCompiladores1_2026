@@ -1,27 +1,42 @@
 import express from 'express';
 import cors from 'cors';
-import multer from 'multer';
-import apiRoutes from './src/routes/api.routes.js';
+import AnalizadorTexto from './src/classes/AnalizadorTexto.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000; // Puerto 5000
+const PORT = 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Configuraciones necesarias
+app.use(cors()); // Permite que Vue se conecte al servidor
+app.use(express.json()); // Permite recibir JSON
 
-// Configurar multer para subir archivos
-const upload = multer({ dest: 'uploads/' });
+/**
+ * RUTA 1: Analizar Texto directamente (El botón verde)
+ */
+app.post('/api/analizar', (req, res) => {
+    const { entrada } = req.body;
+    
+    if (!entrada) {
+        return res.status(400).json({ ok: false, mensaje: "No hay texto para analizar" });
+    }
 
-// Rutas
-app.use('/api', apiRoutes);
+    const respuesta = AnalizadorTexto.analizar(entrada);
+    res.json(respuesta);
+});
 
-// Error handling
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: err.message });
+/**
+ * RUTA 2: Subida de archivos (Simulada para que funcione con tu App.vue)
+ * En lugar de guardar en disco, devolvemos un éxito para que el frontend
+ * maneje la lectura local, que es más rápido y seguro.
+ */
+app.post('/api/upload', (req, res) => {
+    // Como tu App.vue usa FormData, aquí recibimos el archivo.
+    // Para simplificar y que no te dé error de conexión:
+    res.json({
+        exito: true,
+        archivo: { nombreUnico: "temp_file" }
+    });
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en puerto ${PORT}`);
+    console.log(`🚀 Servidor backend corriendo en http://localhost:${PORT}`);
 });

@@ -81,6 +81,11 @@ router.post('/analyze-text', async (req, res) => {
     }
 
     const resultado = await servicioCompilador.procesarTexto(text);
+
+    if (!resultado.exito && !resultado.error && Array.isArray(resultado.errores)) {
+      resultado.error = resultado.errores.map(err => err.mensaje).join(' | ');
+    }
+
     res.json(resultado);
   } catch (error) {
     console.error('Error al analizar texto:', error);

@@ -1,7 +1,6 @@
 <template>
   <div class="flex min-h-screen bg-[#0b0f1a] text-slate-300 font-sans overflow-y-auto">
     
-    <!-- Sidebar con slide -->
     <transition name="slide">
       <aside v-if="sidebarOpen" class="w-72 bg-[#161b2b] border-r border-slate-800 flex flex-col shadow-2xl">
         <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-[#1c2333]">
@@ -25,15 +24,18 @@
     </transition>
 
     <main class="flex-1 flex flex-col min-w-0 relative">
-      <!-- Header centrado + botón abrir sidebar -->
       <header class="h-16 flex items-center justify-center bg-[#0b0f1a] border-b border-slate-800/60 relative">
         <button v-if="!sidebarOpen" @click="sidebarOpen = true" class="absolute left-4 p-2 hover:bg-slate-800 rounded-lg transition">
           <span class="material-icons">menu</span>
         </button>
         <h1 class="text-xl font-semibold tracking-tight text-white">Analizador sintáctico LL</h1>
         
-        <!-- Mensajes de notificación -->
         <div class="absolute right-4 flex flex-col gap-2">
+          <transition name="fade">
+            <div v-if="mensajeProcesando" class="bg-amber-500/20 border border-amber-500/50 text-amber-400 px-4 py-2 rounded-lg text-sm">
+              ⏳ {{ mensajeProcesando }}
+            </div>
+          </transition>
           <transition name="fade">
             <div v-if="mensajeExito" class="bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 px-4 py-2 rounded-lg text-sm">
               ✓ {{ mensajeExito }}
@@ -47,13 +49,11 @@
         </div>
       </header>
 
-      <div class="flex-1 p-6 grid grid-cols-12 gap-6">
-        
-        <!-- Editor -->
-        <div class="col-span-8 flex flex-col gap-6">
+      <div class="flex-1 p-6 grid grid-cols-12 gap-6 h-[calc(100vh-64px)]">
+  
+      <div class="col-span-7 flex flex-col gap-6">
           <div class="flex-1 bg-[#161b2b] rounded-2xl border border-slate-800 flex flex-col relative shadow-lg overflow-hidden">
             
-            <!-- Header editor -->
             <div class="p-4 flex justify-between items-center bg-slate-800/30 rounded-t-2xl border-b border-slate-700">
               <div>
                 <h1 class="text-sm font-bold text-white text-[20px]">Editor de Código</h1>
@@ -64,16 +64,13 @@
               <input type="file" ref="fileInputRef" @change="handleFileUpload" accept=".txt" style="display: none;">
             </div>
 
-            <!-- Editor con scroll interno -->
             <div class="flex flex-1 overflow-hidden">
               <div class="flex flex-1 overflow-auto" ref="scrollContainer" @scroll="syncScroll">
                 
-                <!-- Line numbers -->
                 <div ref="linesRef" class="text-sm font-mono text-slate-500 p-4 text-right select-none leading-relaxed">
                   <div v-for="n in lineCount" :key="n">{{ n }}</div>
                 </div>
 
-                <!-- Textarea -->
                 <textarea 
                   ref="textareaRef"
                   v-model="grammarInput"
@@ -85,7 +82,6 @@
               </div>
             </div>
             
-            <!-- Cursor -->
             <div class="p-3 text-right text-[10px] text-slate-600 font-mono border-t border-slate-800 uppercase tracking-tighter">
               Línea: {{ cursor.line }}, Columna: {{ cursor.column }}
             </div>
@@ -97,8 +93,7 @@
           </button>
         </div>
 
-        <!-- Panel derecho -->
-        <div class="col-span-4 flex flex-col gap-6">
+        <div class="col-span-5 flex flex-col gap-6 overflow-hidden">
           
           <div class="bg-[#161b2b] p-5 rounded-2xl border border-slate-800 shadow-sm">
             <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Cadenas de Entrada</h3>
@@ -118,7 +113,19 @@
                 <span class="material-icons text-base">error_outline</span> Lista de Errores
               </h3>
             </div>
-            <div class="h-32 overflow-y-auto"></div>
+            <div class="h-64 overflow-y-auto p-3 space-y-2">
+              <div v-if="erroresAnalisis.length === 0" class="text-sm text-emerald-400 flex items-center gap-2">
+                <span class="material-icons text-base">check_circle</span> Sin errores
+              </div>
+              <div v-for="(error, index) in erroresAnalisis" :key="index" class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-xs">
+                <div class="flex justify-between mb-1">
+                  <span class="font-bold text-red-400">{{ error.tipo }}</span>
+                  <span class="text-slate-500">Línea {{ error.linea }}, Col {{ error.columna }}</span>
+                </div>
+                <p class="text-slate-300 mb-1">{{ error.descripcion }}</p>
+                <p v-if="error.lexema" class="text-slate-500">Lexema: <span class="font-mono text-slate-400">{{ error.lexema }}</span></p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -137,6 +144,8 @@ const fileInputRef = ref(null)
 const cargando = ref(false)
 const mensajeError = ref("")
 const mensajeExito = ref("")
+const mensajeProcesando = ref("")
+const erroresAnalisis = ref([])
 
 const textareaRef = ref(null)
 const linesRef = ref(null)
@@ -175,7 +184,6 @@ async function handleFileUpload(event) {
     return
   }
 
-  // Validar que sea un archivo .txt
   if (!file.name.endsWith('.txt')) {
     mensajeError.value = 'Solo se permiten archivos .txt'
     setTimeout(() => mensajeError.value = '', 3000)
@@ -198,7 +206,6 @@ async function handleFileUpload(event) {
     const data = await response.json()
 
     if (data.exito) {
-      // Cargar el contenido del archivo en el editor
       const contenidoResponse = await fetch(`http://localhost:5000/api/files/${data.archivo.nombreUnico}`)
       const contenido = await contenidoResponse.text()
       
@@ -213,12 +220,67 @@ async function handleFileUpload(event) {
     mensajeError.value = 'Error de conexión con el servidor'
   } finally {
     cargando.value = false
-    fileInputRef.value.value = '' // Limpiar el input
+    fileInputRef.value.value = '' 
   }
 }
 
-const procesarGramatica = () => {
-  console.log("Enviando al backend:", grammarInput.value)
+const procesarGramatica = async () => {
+  if (!grammarInput.value.trim()) {
+    mensajeError.value = 'Debes ingresar un texto válido para analizar'
+    setTimeout(() => mensajeError.value = '', 3000)
+    return
+  }
+
+  cargando.value = true
+  mensajeError.value = ''
+  mensajeExito.value = ''
+  mensajeProcesando.value = 'Procesando gramática...'
+  erroresAnalisis.value = []
+
+  try {
+    // CAMBIO: Se ajusta la URL a la que definimos en server.js (/api/analizar)
+    // CAMBIO: Se ajusta el body a { entrada: ... } según AnalizadorTexto.js
+    const response = await fetch('http://localhost:5000/api/analizar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ entrada: grammarInput.value })
+    })
+
+    const data = await response.json()
+    mensajeProcesando.value = ''
+
+    // CAMBIO: Se ajusta la validación a data.ok
+    if (!data.ok) {
+      erroresAnalisis.value = Array.isArray(data.errores) && data.errores.length
+        ? data.errores
+        : [{
+            tipo: 'SISTEMA',
+            lexema: '',
+            linea: 0,
+            columna: 0,
+            descripcion: data.mensaje || 'Ocurrió un error al analizar'
+          }]
+      mensajeError.value = 'Se encontraron errores en el análisis'
+      setTimeout(() => mensajeError.value = '', 3000)
+      return
+    }
+
+    mensajeExito.value = data.mensaje || 'Análisis completado exitosamente'
+    setTimeout(() => mensajeExito.value = '', 3000)
+  } catch (error) {
+    mensajeProcesando.value = ''
+    erroresAnalisis.value = [{
+      tipo: 'CONEXION',
+      lexema: '',
+      linea: 0,
+      columna: 0,
+      descripcion: 'Error de conexión con el servidor'
+    }]
+  } finally {
+    cargando.value = false
+  }
 }
 </script>
 
