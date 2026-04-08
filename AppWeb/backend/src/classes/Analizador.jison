@@ -65,8 +65,9 @@
 %%
 
 inicio
-    : R_WISON SIGNO_INICIO instrucciones FIN_WISON EOF { return $2; }
+    : R_WISON SIGNO_INICIO bloque_lex bloque_syntax FIN_WISON EOF { return $2; }
     ;
+
 
 
 bloque_lex
@@ -166,6 +167,8 @@ simbolo
     | ID_TERMINAL
         { $$ = { tipo: 'Ref_Terminal', id: $1 }; }
     ;
+
+    
 
 %%
 

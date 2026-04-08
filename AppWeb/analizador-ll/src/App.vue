@@ -178,49 +178,39 @@ function clickSubirArchivo() {
 }
 
 async function handleFileUpload(event) {
-  const file = event.target.files[0]
-  
-  if (!file) {
-    return
-  }
+  const file = event.target.files[0];
+  if (!file) return;
 
-  if (!file.name.endsWith('.txt')) {
-    mensajeError.value = 'Solo se permiten archivos .txt'
-    setTimeout(() => mensajeError.value = '', 3000)
-    return
-  }
-
-  cargando.value = true
-  mensajeError.value = ""
-  mensajeExito.value = ""
+  const formData = new FormData();
+  formData.append('file', file);
 
   try {
-    const formData = new FormData()
-    formData.append('file', file)
-
+    cargando.value = true;
+    
+    // 1. Subir el archivo al servidor
     const response = await fetch('http://localhost:5000/api/upload', {
       method: 'POST',
       body: formData
-    })
-
-    const data = await response.json()
+    });
+    const data = await response.json();
 
     if (data.exito) {
-      const contenidoResponse = await fetch(`http://localhost:5000/api/files/${data.archivo.nombreUnico}`)
-      const contenido = await contenidoResponse.text()
+      // 2. Pedirle al servidor el contenido del archivo recién guardado
+      // IMPORTANTE: data.archivo.nombreUnico debe coincidir con lo que enviamos
+      const contenidoResponse = await fetch(`http://localhost:5000/api/files/${data.archivo.nombreUnico}`);
       
-      grammarInput.value = contenido
-      mensajeExito.value = `Archivo "${file.name}" cargado exitosamente`
-      setTimeout(() => mensajeExito.value = '', 3000)
-    } else {
-      mensajeError.value = data.error || 'Error al subir el archivo'
+      if (contenidoResponse.ok) {
+        const contenido = await contenidoResponse.text();
+        grammarInput.value = contenido;
+        mensajeExito.value = `Archivo "${file.name}" cargado desde el servidor`;
+      }
     }
   } catch (error) {
-    console.error('Error:', error)
-    mensajeError.value = 'Error de conexión con el servidor'
+    mensajeError.value = "Error al conectar con el servidor de archivos";
   } finally {
-    cargando.value = false
-    fileInputRef.value.value = '' 
+    cargando.value = false;
+    fileInputRef.value.value = '';
+    setTimeout(() => { mensajeExito.value = ''; mensajeError.value = '' }, 3000);
   }
 }
 
