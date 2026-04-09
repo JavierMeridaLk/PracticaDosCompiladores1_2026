@@ -65,10 +65,14 @@
 %%
 
 inicio
-    : R_WISON SIGNO_INICIO bloque_lex bloque_syntax FIN_WISON EOF { return $2; }
+    : R_WISON SIGNO_INICIO bloque_lex bloque_syntax FIN_WISON EOF 
+        { 
+            return { 
+                lexico: $3, 
+                sintaxis: $4 
+            }; 
+        }
     ;
-
-
 
 bloque_lex
     : R_LEX LLAVE_DP_A lista_terminales LLAVE_DP_C

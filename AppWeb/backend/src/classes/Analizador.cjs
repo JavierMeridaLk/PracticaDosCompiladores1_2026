@@ -84,7 +84,12 @@ performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* actio
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
- return $$[$0-4]; 
+ 
+            return { 
+                lexico: $$[$0-3], 
+                sintaxis: $$[$0-2] 
+            }; 
+        
 break;
 case 2: case 17:
  this.$ = $$[$0-1]; 
