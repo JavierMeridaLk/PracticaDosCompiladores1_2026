@@ -135,4 +135,32 @@ router.get('/files/:filename', async (req, res) => {
   }
 });
 
+// Ruta para analizar la cadena de entrada (Panel Derecho)
+router.post('/analizar-cadena', async (req, res) => {
+    try {
+        const { cadena, datosGramatica } = req.body;
+
+        // Validación básica de entrada
+        if (!datosGramatica) {
+            return res.status(400).json({ 
+                ok: false, 
+                mensaje: "No hay datos de gramática válidos. Analiza la gramática primero." 
+            });
+        }
+
+        // Usamos la instancia ya creada arriba para mayor eficiencia
+        const resultado = await servicioCompilador.procesarEntradaCadena(cadena, datosGramatica);
+        
+        // Enviamos el resultado al frontend (App.vue espera este JSON)
+        res.json(resultado);
+
+    } catch (error) {
+        console.error('Error en /analizar-cadena:', error);
+        res.status(500).json({
+            ok: false,
+            mensaje: 'Error interno en el motor de análisis',
+            errores: [{ tipo: 'SISTEMA', descripcion: error.message }]
+        });
+    }
+});
 export default router;

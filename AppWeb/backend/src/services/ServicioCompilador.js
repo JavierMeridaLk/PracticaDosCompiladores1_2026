@@ -1,6 +1,7 @@
 import GestorArchivos from '../classes/GestorArchivos.js';
 import AnalizadorTexto from '../classes/AnalizadorTexto.js';
 import ManejadorErrores from '../classes/ManejadorErrores.js';
+import EvaluadorCadena from '../classes/EvaluadorCadena.js';
 
 /**
  * Clase ServicioCompilador
@@ -106,5 +107,11 @@ class ServicioCompilador {
     // Implementación pendiente
   }
 }
+
+// Dentro de ServicioCompilador.js
+  async procesarEntradaCadena(cadena, datosGramatica) {
+    // Llamamos al método estático que acabamos de crear
+    return AnalizadorTexto.analizarCadena(cadena, datosGramatica);
+  }
 
 export default ServicioCompilador;
