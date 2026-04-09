@@ -5,9 +5,9 @@ const require = createRequire(import.meta.url);
 const jisonParser = require('./Analizador.cjs');
 
 class AnalizadorTexto {
-    // =====================================================================
-    // 1. ANÁLISIS DE LA GRAMÁTICA WISON (PANEL IZQUIERDO)
-    // =====================================================================
+
+    // Analisis de la gramatica wison
+
     static analizar(contenido) {
         try {
             jisonParser.parser.limpiarErrores();
@@ -72,18 +72,17 @@ class AnalizadorTexto {
         return { ok: errores.length === 0, errores };
     }
 
-    // =====================================================================
-    // 2. ANÁLISIS DE LA CADENA DE ENTRADA (PANEL DERECHO)
-    // =====================================================================
+    // Análisis de la cadena de entrada usando la gramática Wison
+
     static analizarCadena(cadena, datosGramatica) {
         try {
-            // A. Análisis Léxico
+            // Análisis Léxico generado por wison
             const tokens = this.tokenizar(cadena, datosGramatica.lexico);
             if (tokens.error) {
                 return { ok: false, mensaje: "Error Léxico", errores: [tokens.error] };
             }
 
-            // B. Análisis Sintáctico (Pila LL)
+            // B. Análisis Sintáctico usando la Tabla M generada por wison
             const resultadoSintactico = this.parsearLL(tokens.lista, datosGramatica.tablaM, datosGramatica.simboloInicial);
             
             if (!resultadoSintactico.ok) {
@@ -102,7 +101,8 @@ class AnalizadorTexto {
         }
     }
 
-    // --- SUB-MÓDULO: LEXER DINÁMICO ---
+    // Lxer de wison
+
     static tokenizar(cadena, definicionesLexicas) {
         let tokensEncontrados = [];
         let restante = cadena;
@@ -110,18 +110,19 @@ class AnalizadorTexto {
         let columnaActual = 1;
 
         // Construir regex para cada terminal
+
         const expresiones = definicionesLexicas.map(def => {
             return { id: def.identificador, regex: new RegExp("^(" + this.construirRegex(def.expresion) + ")") };
         });
 
         while (restante.length > 0) {
-            // Eliminar espacios, saltos de línea y contar líneas/columnas
+            // limpiar espacios y contar líneas
             const espacios = restante.match(/^[\s\n\r\t]+/);
             if (espacios) {
                 const saltos = (espacios[0].match(/\n/g) || []).length;
                 if (saltos > 0) {
                     lineaActual += saltos;
-                    columnaActual = 1; // Reseteamos columna tras salto de línea
+                    columnaActual = 1; 
                 } else {
                     columnaActual += espacios[0].length;
                 }
@@ -143,7 +144,7 @@ class AnalizadorTexto {
                     restante = restante.slice(match[0].length);
                     columnaActual += match[0].length;
                     matchEncontrado = true;
-                    break; // Cortar el for, ya encontramos el token
+                    break; 
                 }
             }
 
@@ -171,15 +172,16 @@ class AnalizadorTexto {
         }
     }
 
-    // --- SUB-MÓDULO: PARSER LL ---
+    // parse dle wison
+
     static parsearLL(tokens, tablaM, simboloInicial) {
-        // Añadimos símbolo '$' de fin de entrada al arreglo
+
         let entrada = [...tokens, { id: '$', lexema: 'EOF', linea: -1, columna: -1 }];
         let pila = ['$', simboloInicial];
         let i = 0;
 
         let arbol = { id: simboloInicial, hijos: [] };
-        let pilaNodos = [null, arbol]; // Pila paralela para construir el árbol visual
+        let pilaNodos = [null, arbol];
 
         while (pila.length > 0) {
             let X = pila.pop();
@@ -187,7 +189,7 @@ class AnalizadorTexto {
             let token = entrada[i];
 
             if (X === token.id || (X === '$' && token.id === '$')) {
-                // Match exitoso (terminal)
+                // Match exitoso 
                 if (nodoActual) nodoActual.lexema = token.lexema; // Guardar el lexema en la hoja del árbol
                 i++;
             } else if (X.startsWith('$_') || X === '$') {
@@ -196,7 +198,9 @@ class AnalizadorTexto {
                     error: { tipo: 'Sintáctico', descripcion: `Se esperaba el token '${X}'`, lexema: token.lexema, linea: token.linea, columna: token.columna } 
                 };
             } else {
+
                 // Expansión con Tabla M
+
                 const produccion = tablaM[X] ? tablaM[X][token.id] : null;
                 if (!produccion) {
                     return { 
@@ -207,7 +211,8 @@ class AnalizadorTexto {
 
                 const reglaInversa = [...produccion.rhs].reverse();
                 
-                // Procesar regla (hacer push al revés en la pila)
+                // Procesar regla
+
                 reglaInversa.forEach(simbolo => {
                     pila.push(simbolo.id);
                     const nuevoNodo = { id: simbolo.id, hijos: [] };

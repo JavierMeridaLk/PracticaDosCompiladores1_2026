@@ -1,7 +1,4 @@
-/**
- * Clase encargada de la lógica de conjuntos FIRST, FOLLOW 
- * y la construcción de la Tabla M de predicción.
- */
+
 class MotorLL {
     constructor(producciones, noTerminales, simboloInicial) {
         this.producciones = producciones;
@@ -72,7 +69,7 @@ class MotorLL {
                                     this.first[siguiente.id].forEach(f => this.follow[simbolo.id].add(f));
                                 }
                             } else {
-                                // A -> alpha B  => Follow(A) contenido en Follow(B)
+
                                 if (this.follow[p.lado_izquierdo]) {
                                     this.follow[p.lado_izquierdo].forEach(f => this.follow[simbolo.id].add(f));
                                 }

@@ -3,13 +3,7 @@ import path from 'path';
 import { validarExtensionArchivo, generarNombreUnicoArchivo, asegurarDirectorioExiste, leerArchivoAsync, escribirArchivoAsync } from '../utils/fileUtils.js';
 
 /**
- * Clase GestorArchivos
  * Maneja todas las operaciones relacionadas con archivos de texto:
- * - Subida de archivos
- * - Guardado de archivos creados
- * - Lectura de archivos existentes
- * - Validación de tipos de archivo
- * - Listado de archivos guardados
  */
 class GestorArchivos {
   constructor() {
@@ -18,9 +12,6 @@ class GestorArchivos {
     this.inicializarDirectorios();
   }
 
-  /**
-   * Inicializa los directorios necesarios
-   */
   inicializarDirectorios() {
     asegurarDirectorioExiste(this.directorioUploads);
     asegurarDirectorioExiste(this.directorioResultados);
@@ -28,8 +19,8 @@ class GestorArchivos {
 
   /**
    * Sube un archivo de texto al servidor
-   * @param {Object} archivo - Archivo a subir (de multer)
-   * @returns {Promise<Object>} Resultado de la subida
+   * @param {Object} 
+   * @returns {Promise<Object>} 
    */
   async subirArchivo(archivo) {
     try {
@@ -62,9 +53,9 @@ class GestorArchivos {
 
   /**
    * Guarda un archivo de texto creado en el servidor
-   * @param {string} contenido - Contenido del archivo
-   * @param {string} nombreArchivo - Nombre del archivo
-   * @returns {Promise<Object>} Resultado del guardado
+   * @param {string} 
+   * @param {string} 
+   * @returns {Promise<Object>}
    */
   async guardarArchivo(contenido, nombreArchivo) {
     try {
@@ -88,8 +79,8 @@ class GestorArchivos {
 
   /**
    * Lee un archivo existente del servidor
-   * @param {string} nombreArchivo - Nombre del archivo a leer
-   * @returns {Promise<Object>} Contenido del archivo
+   * @param {string}
+   * @returns {Promise<Object>}
    */
   async leerArchivo(nombreArchivo) {
     try {

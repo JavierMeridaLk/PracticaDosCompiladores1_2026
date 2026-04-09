@@ -111,8 +111,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
 // Inicio del servidor
 app.listen(PORT, () => {
-    console.log(`====================================================`);
-    console.log(`🚀 Servidor backend corriendo en http://localhost:${PORT}`);
-    console.log(`📂 Archivos servidos en http://localhost:${PORT}/api/files/`);
-    console.log(`====================================================`);
+    console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
+    console.log(`Archivos servidos en http://localhost:${PORT}/api/files/`);
+
 });

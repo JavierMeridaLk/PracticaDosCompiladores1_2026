@@ -302,11 +302,10 @@ parse: function parse(input) {
 }};
 
 
-/* Código Adicional */
+/*Código */
 {{
     var listaErrores = [];
 
-    // Sobrescribimos el manejador de errores de Jison
     parser.parseError = function (str, hash) {
         const error = {
             tipo: hash.token ? "Sintáctico" : "Léxico",

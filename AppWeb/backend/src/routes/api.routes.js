@@ -11,7 +11,6 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-    // Mantener el nombre original temporalmente, GestorArchivos lo manejará
     cb(null, file.originalname);
   }
 });
@@ -135,7 +134,7 @@ router.get('/files/:filename', async (req, res) => {
   }
 });
 
-// Ruta para analizar la cadena de entrada (Panel Derecho)
+// Ruta para analizar la cadena de entrada
 router.post('/analizar-cadena', async (req, res) => {
     try {
         const { cadena, datosGramatica } = req.body;
@@ -151,7 +150,7 @@ router.post('/analizar-cadena', async (req, res) => {
         // Usamos la instancia ya creada arriba para mayor eficiencia
         const resultado = await servicioCompilador.procesarEntradaCadena(cadena, datosGramatica);
         
-        // Enviamos el resultado al frontend (App.vue espera este JSON)
+        // Enviamos el resultado al frontend
         res.json(resultado);
 
     } catch (error) {

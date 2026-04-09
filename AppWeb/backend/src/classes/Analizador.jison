@@ -3,32 +3,26 @@
 
 %%
 
-/* Reglas para omitir (ahora más estrictas) */
+/*Omitir los comentarios y espacios en blanco */
 \s+                     /* omitir espacios y saltos de línea */
 \/\*\*[\s\S]*?\*\/      /* omitir comentarios multilínea */
-\#[^\n]* /* omitir comentarios de una línea */
+\#[^\n]*                /* omitir comentarios de una línea */
 
+/* Palabras Reservadas y Símbolos */
 
 "Wison"                 return 'R_WISON';
 "¿"                     return 'SIGNO_INICIO';
 "?Wison"                return 'FIN_WISON';
-/* Palabras Reservadas y Símbolos */
-
 "¿"                     return 'SIGNO_INICIO';
-
-
 "Lex"                   return 'R_LEX';
 "{:"                    return 'LLAVE_DP_A';
 ":}"                    return 'LLAVE_DP_C';
-
 "Syntax"                return 'R_SYNTAX';
 "{{:"                   return 'DOBLE_LLAVE_DP_A';
 ":}}"                   return 'DOBLE_LLAVE_DP_C';
-
 "Terminal"              return 'R_TERMINAL';
 "No_Terminal"           return 'R_NOTERMINAL';
 "Initial_Sim"           return 'R_INITIAL_SIM';
-
 "<-"                    return 'ASIGNACION_LEX';
 "<="                    return 'ASIGNACION_SYN';
 ";"                     return 'PUNTO_COMA';
@@ -38,13 +32,16 @@
 "*"                     return 'ASTERISCO';
 "+"                     return 'MAS';
 "?"                     return 'INTERROGACION';
-
 "[aA-zZ]"               return 'RANGO_LETRAS';
 "[0-9]"                 return 'RANGO_NUMEROS';
+
+/*Identificadores*/
 
 \$_[a-zA-Z0-9_]+        return 'ID_TERMINAL';
 \%_[a-zA-Z0-9_]+        return 'ID_NOTERMINAL';
 \'[^\']*\'              return 'CADENA';
+
+/*Manejo de Errores lecicos*/
 
 .                       {
                             parser.parseError("Error Léxico: Caracter inesperado '" + yytext + "'", {
@@ -176,11 +173,10 @@ simbolo
 
 %%
 
-/* Código Adicional */
+/*Código */
 {{
     var listaErrores = [];
 
-    // Sobrescribimos el manejador de errores de Jison
     parser.parseError = function (str, hash) {
         const error = {
             tipo: hash.token ? "Sintáctico" : "Léxico",
